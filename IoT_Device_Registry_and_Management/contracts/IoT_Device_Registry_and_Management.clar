@@ -204,5 +204,15 @@
   (map-get? device-interactions { device-id: device-id, interaction-type: interaction-type })
 )
 
+(define-data-var contract-paused bool false)
+
+;; NEW FEATURE: Pausability Modifier
+(define-public (toggle-contract-pause)
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-UNAUTHORIZED)
+    (var-set contract-paused (not (var-get contract-paused)))
+    (ok (var-get contract-paused))
+  )
+)
 
 
