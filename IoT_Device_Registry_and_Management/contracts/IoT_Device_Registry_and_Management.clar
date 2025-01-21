@@ -30,4 +30,23 @@
   }
 )
 
+;; Device Verification Mapping
+(define-map device-verifications
+  { device-id: (buff 32) }
+  {
+    verification-count: uint,
+    total-verification-score: uint,
+    last-verified-timestamp: uint
+  }
+)
+
+;; Device Access Control Mapping
+(define-map device-access-control
+  { device-id: (buff 32), authorized-user: principal }
+  {
+    access-level: (string-ascii 20),
+    expiration-block: uint
+  }
+)
+
 
