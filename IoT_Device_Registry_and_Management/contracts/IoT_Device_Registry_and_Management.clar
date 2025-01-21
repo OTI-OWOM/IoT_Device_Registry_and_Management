@@ -221,7 +221,7 @@
   { authorized: bool }
 )
 
-;; NEW FEATURE: Role Management
+;; Role Management
 (define-public (assign-role 
   (role (string-ascii 20))
   (user principal)
@@ -235,3 +235,14 @@
     (ok true)
   )
 )
+
+;; NEW FEATURE: Emergency Stop Mechanism
+(define-public (emergency-stop)
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-UNAUTHORIZED)
+    (var-set contract-paused true)
+    ;; Optional: Additional emergency shutdown logic
+    (ok true)
+  )
+)
+
