@@ -160,5 +160,41 @@
   )
 )
 
+;; Advanced Device Interaction Tracking
+(define-map device-interactions
+  { device-id: (buff 32), interaction-type: (string-ascii 50) }
+  {
+    interaction-count: uint,
+    last-interaction-timestamp: uint
+  }
+)
+
+;; Record Device Interaction
+(define-public (record-device-interaction
+  (device-id (buff 32))
+  (interaction-type (string-ascii 50))
+)
+  (let 
+    (
+      (current-interaction 
+        (default-to 
+          { interaction-count: u0, last-interaction-timestamp: stacks-block-height }
+          (map-get? device-interactions { device-id: device-id, interaction-type: interaction-type })
+        )
+      )
+    )
+    
+    (map-set device-interactions
+      { device-id: device-id, interaction-type: interaction-type }
+      {
+        interaction-count: (+ (get interaction-count current-interaction) u1),
+        last-interaction-timestamp: stacks-block-height
+      }
+    )
+    
+    (ok true)
+  )
+)
+
 
 
