@@ -215,9 +215,23 @@
   )
 )
 
-;; NEW FEATURE: Role-Based Access Control
+;; Role-Based Access Control
 (define-map contract-roles 
   { role: (string-ascii 20), user: principal }
   { authorized: bool }
 )
 
+;; NEW FEATURE: Role Management
+(define-public (assign-role 
+  (role (string-ascii 20))
+  (user principal)
+)
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-UNAUTHORIZED)
+    (map-set contract-roles 
+      { role: role, user: user }
+      { authorized: true }
+    )
+    (ok true)
+  )
+)
