@@ -134,6 +134,31 @@
   )
 )
 
+;; Device Access Control
+(define-public (grant-device-access
+  (device-id (buff 32))
+  (authorized-user principal)
+  (access-level (string-ascii 20))
+  (duration uint)
+)
+  (let 
+    (
+      (device (unwrap! (map-get? devices { device-id: device-id }) ERR-DEVICE-NOT-FOUND))
+    )
+    
+    (asserts! (is-eq tx-sender (get owner device)) ERR-UNAUTHORIZED)
+    
+    (map-set device-access-control
+      { device-id: device-id, authorized-user: authorized-user }
+      {
+        access-level: access-level,
+        expiration-block: (+ stacks-block-height duration)
+      }
+    )
+    
+    (ok true)
+  )
+)
 
 
 
