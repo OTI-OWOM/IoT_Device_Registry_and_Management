@@ -50,3 +50,53 @@
 )
 
 
+;; Enhanced Device Registration
+(define-public (register-device
+  (device-id (buff 32))
+  (public-key (buff 33))
+  (device-type (string-ascii 50))
+  (metadata-uri (string-ascii 256))
+  (location { latitude: int, longitude: int })
+  (capabilities (list 10 (string-ascii 50)))
+)
+  (begin
+    ;; Validate input parameters
+    (asserts! (> (len device-type) u0) ERR-INVALID-PARAMETERS)
+    (asserts! (is-none (map-get? devices { device-id: device-id })) ERR-DEVICE-EXISTS)
+    
+    ;; Register device with comprehensive metadata
+    (map-set devices 
+      { device-id: device-id }
+      {
+        owner: tx-sender,
+        public-key: public-key,
+        device-type: device-type,
+        registration-timestamp: stacks-block-height,
+        last-activity-timestamp: stacks-block-height,
+        reputation-score: u100,
+        is-active: true,
+        metadata-uri: metadata-uri,
+        device-location: location,
+        device-capabilities: capabilities
+      }
+    )
+    
+    ;; Initialize verification tracking
+    (map-set device-verifications
+      { device-id: device-id }
+      {
+        verification-count: u0,
+        total-verification-score: u0,
+        last-verified-timestamp: stacks-block-height
+      }
+    )
+    
+    ;; Mint initial device tokens
+    (try! (ft-mint? device-token u100 tx-sender))
+    
+    (ok true)
+  )
+)
+
+
+
