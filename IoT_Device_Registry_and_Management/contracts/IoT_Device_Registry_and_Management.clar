@@ -49,7 +49,6 @@
   }
 )
 
-
 ;; Enhanced Device Registration
 (define-public (register-device
   (device-id (buff 32))
@@ -97,6 +96,44 @@
     (ok true)
   )
 )
+
+;; Advanced Device Data Verification
+(define-public (verify-device-data
+  (device-id (buff 32))
+  (verification-score uint)
+  (data-hash (buff 32))
+)
+  (let 
+    (
+      (verification (unwrap! 
+        (map-get? device-verifications { device-id: device-id }) 
+        ERR-DEVICE-NOT-FOUND
+      ))
+      (device (unwrap! 
+        (map-get? devices { device-id: device-id }) 
+        ERR-DEVICE-NOT-FOUND
+      ))
+    )
+    
+    ;; Advanced verification logic
+    (asserts! (> verification-score u0) ERR-UNAUTHORIZED)
+    
+    (map-set device-verifications
+      { device-id: device-id }
+      {
+        verification-count: (+ (get verification-count verification) u1),
+        total-verification-score: (+ (get total-verification-score verification) verification-score),
+        last-verified-timestamp: stacks-block-height
+      }
+    )
+    
+    ;; Reward verification with tokens
+    (try! (ft-mint? device-token verification-score tx-sender))
+    
+    (ok true)
+  )
+)
+
 
 
 
