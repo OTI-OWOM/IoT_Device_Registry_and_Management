@@ -206,7 +206,7 @@
 
 (define-data-var contract-paused bool false)
 
-;; NEW FEATURE: Pausability Modifier
+;; Pausability Modifier
 (define-public (toggle-contract-pause)
   (begin
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-UNAUTHORIZED)
@@ -215,4 +215,9 @@
   )
 )
 
+;; NEW FEATURE: Role-Based Access Control
+(define-map contract-roles 
+  { role: (string-ascii 20), user: principal }
+  { authorized: bool }
+)
 
