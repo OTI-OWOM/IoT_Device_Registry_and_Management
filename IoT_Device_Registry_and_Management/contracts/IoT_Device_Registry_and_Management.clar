@@ -196,5 +196,13 @@
   )
 )
 
+;; Additional Helper Functions
+(define-read-only (get-device-interactions
+  (device-id (buff 32))
+  (interaction-type (string-ascii 50))
+)
+  (map-get? device-interactions { device-id: device-id, interaction-type: interaction-type })
+)
+
 
 
