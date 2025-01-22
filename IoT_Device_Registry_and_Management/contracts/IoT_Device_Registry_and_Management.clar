@@ -236,7 +236,7 @@
   )
 )
 
-;; NEW FEATURE: Emergency Stop Mechanism
+;; Emergency Stop Mechanism
 (define-public (emergency-stop)
   (begin
     (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-UNAUTHORIZED)
@@ -246,3 +246,11 @@
   )
 )
 
+;; NEW FEATURE: Upgradeable Proxy Pattern
+(define-map contract-upgrades
+  { version: uint }
+  { 
+    implementation-address: principal,
+    upgrade-timestamp: uint 
+  }
+)
