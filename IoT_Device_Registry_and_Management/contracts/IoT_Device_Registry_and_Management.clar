@@ -246,7 +246,7 @@
   )
 )
 
-;; NEW FEATURE: Upgradeable Proxy Pattern
+;; Upgradeable Proxy Pattern
 (define-map contract-upgrades
   { version: uint }
   { 
@@ -254,3 +254,38 @@
     upgrade-timestamp: uint 
   }
 )
+
+;; Device Transfer with Royalty
+(define-constant TRANSFER-FEE-PERCENTAGE u5) ;; 5% transfer fee
+
+(define-public (transfer-device-ownership
+  (device-id (buff 32))
+  (new-owner principal)
+)
+  (let 
+    (
+      (current-device (unwrap! 
+        (map-get? devices { device-id: device-id }) 
+        ERR-DEVICE-NOT-FOUND
+      ))
+      (transfer-fee (/ 
+        (* (ft-get-balance device-token tx-sender) TRANSFER-FEE-PERCENTAGE) 
+        u100
+      ))
+    )
+    
+    (asserts! (is-eq tx-sender (get owner current-device)) ERR-UNAUTHORIZED)
+    
+    ;; Collect transfer fee
+    (try! (ft-transfer? device-token transfer-fee tx-sender CONTRACT-OWNER))
+    
+    ;; Update device ownership
+    (map-set devices 
+      { device-id: device-id }
+      (merge current-device { owner: new-owner })
+    )
+    
+    (ok true)
+  )
+)
+
