@@ -196,5 +196,96 @@
   )
 )
 
+;; Additional Helper Functions
+(define-read-only (get-device-interactions
+  (device-id (buff 32))
+  (interaction-type (string-ascii 50))
+)
+  (map-get? device-interactions { device-id: device-id, interaction-type: interaction-type })
+)
 
+(define-data-var contract-paused bool false)
+
+;; Pausability Modifier
+(define-public (toggle-contract-pause)
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-UNAUTHORIZED)
+    (var-set contract-paused (not (var-get contract-paused)))
+    (ok (var-get contract-paused))
+  )
+)
+
+;; Role-Based Access Control
+(define-map contract-roles 
+  { role: (string-ascii 20), user: principal }
+  { authorized: bool }
+)
+
+;; Role Management
+(define-public (assign-role 
+  (role (string-ascii 20))
+  (user principal)
+)
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-UNAUTHORIZED)
+    (map-set contract-roles 
+      { role: role, user: user }
+      { authorized: true }
+    )
+    (ok true)
+  )
+)
+
+;; Emergency Stop Mechanism
+(define-public (emergency-stop)
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-UNAUTHORIZED)
+    (var-set contract-paused true)
+    ;; Optional: Additional emergency shutdown logic
+    (ok true)
+  )
+)
+
+;; Upgradeable Proxy Pattern
+(define-map contract-upgrades
+  { version: uint }
+  { 
+    implementation-address: principal,
+    upgrade-timestamp: uint 
+  }
+)
+
+;; Device Transfer with Royalty
+(define-constant TRANSFER-FEE-PERCENTAGE u5) ;; 5% transfer fee
+
+(define-public (transfer-device-ownership
+  (device-id (buff 32))
+  (new-owner principal)
+)
+  (let 
+    (
+      (current-device (unwrap! 
+        (map-get? devices { device-id: device-id }) 
+        ERR-DEVICE-NOT-FOUND
+      ))
+      (transfer-fee (/ 
+        (* (ft-get-balance device-token tx-sender) TRANSFER-FEE-PERCENTAGE) 
+        u100
+      ))
+    )
+    
+    (asserts! (is-eq tx-sender (get owner current-device)) ERR-UNAUTHORIZED)
+    
+    ;; Collect transfer fee
+    (try! (ft-transfer? device-token transfer-fee tx-sender CONTRACT-OWNER))
+    
+    ;; Update device ownership
+    (map-set devices 
+      { device-id: device-id }
+      (merge current-device { owner: new-owner })
+    )
+    
+    (ok true)
+  )
+)
 
